@@ -14,7 +14,7 @@ let modulo x y = ((x mod y) + y) mod y
 let move2 x direction distance =
   let new_x = move x direction distance in
   let passes = 
-    if new_x <= 0 then abs(new_x / 100) + 1 - (if x = 0 then 1 else 0)
+    if new_x <= 0 then abs(new_x / 100) + (if x != 0 then 1 else 0)
     else (new_x / 100) in 
   (new_x, passes)
 
