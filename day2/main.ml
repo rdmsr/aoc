@@ -56,14 +56,12 @@ let rec count2 boundary n acc =
     | false -> count2 boundary (n + 1) acc
 
 
-
 let rec solve f ranges x n =
   match ranges with
   | [] -> n
   | range :: rest ->
      let occ = f (List.nth range 1) (List.nth range 0) 0 in
       solve f rest x (n + occ)
-
 
 let () =
   let content = read_file Sys.argv.(1) in
