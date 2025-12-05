@@ -20,9 +20,7 @@ let process_lines lines =
 
 let part1 id_list range_list =
   let in_any_range id ranges =
-    List.exists (fun r ->
-      match r with
-      | (l, u) -> l <= id && id <= u) ranges
+    List.exists (fun (l, u) -> l <= id && id <= u) ranges
   in
   List.fold_left (fun acc elem ->
     if in_any_range elem range_list then
