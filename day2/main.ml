@@ -1,11 +1,7 @@
 let read_file f = In_channel.with_open_text f In_channel.input_all
 
-
 let parse_line l =
-  String.trim l
-  |> String.split_on_char '-'
-  |> List.map int_of_string
-
+  String.trim l |> String.split_on_char '-' |> List.map int_of_string
 
 let split_half s =
   let len = String.length s in
@@ -18,14 +14,11 @@ let rec count1 boundary n acc =
   | _ ->
       let num_str = string_of_int n in
       if String.length num_str mod 2 = 0 then
-        let (substr, substr_right) = split_half num_str in
+        let substr, substr_right = split_half num_str in
         if String.equal substr substr_right then
           count1 boundary (n + 1) (acc + n)
-        else
-          count1 boundary (n + 1) acc
-      else
-        count1 boundary (n + 1) acc
-
+        else count1 boundary (n + 1) acc
+      else count1 boundary (n + 1) acc
 
 let is_repeating s =
   let len = String.length s in
@@ -36,16 +29,12 @@ let is_repeating s =
       let sub = String.sub s 0 sub_len in
       let rec check i =
         if i = len then true
-        else if String.sub s i sub_len = sub then
-          check (i + sub_len)
-        else
-          false
+        else if String.sub s i sub_len = sub then check (i + sub_len)
+        else false
       in
-      if check sub_len then true
-      else try_len (sub_len + 1)
+      if check sub_len then true else try_len (sub_len + 1)
   in
   try_len 1
-
 
 let rec count2 boundary n acc =
   if n > boundary then acc
@@ -55,12 +44,11 @@ let rec count2 boundary n acc =
     | true -> count2 boundary (n + 1) (acc + n)
     | false -> count2 boundary (n + 1) acc
 
-
 let rec solve f ranges x n =
   match ranges with
   | [] -> n
   | range :: rest ->
-     let occ = f (List.nth range 1) (List.nth range 0) 0 in
+      let occ = f (List.nth range 1) (List.nth range 0) 0 in
       solve f rest x (n + occ)
 
 let () =
