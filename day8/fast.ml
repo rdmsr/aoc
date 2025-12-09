@@ -9,10 +9,10 @@ let distance (x, y, z) (x', y', z') =
 let parse_coord s = Scanf.sscanf s "%d,%d,%d" (fun a b c -> (a, b, c))
 
 module Coord = struct
-  type t = int * int * int
+	type t = int * int * int
 
-  let compare = compare
-end
+	let compare = compare
+  end
 
 module CoordSet = Set.Make (Coord)
 
@@ -20,7 +20,7 @@ let find_set elem arr =
   let rec aux i =
     if i = Array.length arr then None
     else if CoordSet.mem elem arr.(i) then Some (i, arr.(i))
-    else aux (i + 1)
+		 else aux (i + 1)
   in
   match aux 0 with Some x -> x | None -> failwith "wtf"
 
@@ -28,22 +28,18 @@ let rec make_coords acc = function
   | [] -> acc
   | line :: rest -> make_coords (parse_coord line :: acc) rest
 
-let rec make_edges acc = function
-  | [] -> acc
-  | x :: xs ->
-      let new_acc =
-        xs |> List.fold_left (fun acc elem -> (x, elem) :: acc) []
-      in
-      make_edges (new_acc @ acc) xs
-
-
-let insert_in_heap heap n elem =
-  if (Pairing_heap.length heap) <= n then
-	Pairing_heap.add heap elem
-else begin
-	Pairing_heap.remove_top heap;
-	Pairing_heap.add heap elem
-end
+let insert_in_heap heap n elem cmp =
+  if Pairing_heap.length heap < n then
+    Pairing_heap.add heap elem
+  else begin
+		 match Pairing_heap.top heap with
+		 | Some top ->
+			 if cmp elem top < 0 then begin
+										Pairing_heap.remove_top heap;
+										Pairing_heap.add heap elem
+									  end
+		 | None -> Pairing_heap.add heap elem
+	   end
 
 let heap_ordered_list heap =
   let rec aux acc =
@@ -62,62 +58,72 @@ let part1 lines n =
   in
 
   let rec connect_edges i arr = function
-    | [] -> arr
-    | (x1, x2) :: xs ->
-        if i = 0 then arr
-        else
-          let iset1, set1 = find_set x1 arr in
-          let iset2, set2 = find_set x2 arr in
-          if iset1 <> iset2 then begin
-            arr.(iset1) <- CoordSet.union set1 set2;
-            arr.(iset2) <- CoordSet.empty
-          end;
-          connect_edges (i - 1) arr xs
+      | [] -> arr
+      | (x1, x2) :: xs ->
+          if i = 0 then arr
+          else
+			let iset1, set1 = find_set x1 arr in
+			let iset2, set2 = find_set x2 arr in
+			if iset1 <> iset2 then begin
+									 arr.(iset1) <- CoordSet.union set1 set2;
+									 arr.(iset2) <- CoordSet.empty
+								   end;
+			connect_edges (i - 1) arr xs
   in
   let heap = Pairing_heap.create ~min_size:n ~cmp:(fun (a, b) (c, d) -> distance c d - distance a b) () in
 
   Array.iteri (fun i x -> 
 		  Array.iteri (fun j elem -> 
-				if j > i then insert_in_heap heap n (x, elem)
+				if j > i then insert_in_heap heap n (x, elem) (fun (a, b) (c, d) -> distance a b - distance c d)
 			) coords_arr
 	  ) coords_arr;
 
   heap_ordered_list heap
-  |> connect_edges n arr
-  |> Array.sort (fun a b -> compare (CoordSet.cardinal b) (CoordSet.cardinal a));
+	|> connect_edges n arr
+	|> Array.sort (fun a b -> compare (CoordSet.cardinal b) (CoordSet.cardinal a));
 
   CoordSet.cardinal arr.(0)
-  * CoordSet.cardinal arr.(1)
+	* CoordSet.cardinal arr.(1)
 	* CoordSet.cardinal arr.(2)
 
 let part2 lines =
   let coords = make_coords [] lines in
   let coords_arr = Array.of_list coords in
+  let n = Array.length coords_arr in
   let arr =
-    Array.init (List.length coords) (fun i ->
-        CoordSet.empty |> CoordSet.add coords_arr.(i))
+	Array.init n (fun i ->
+		  CoordSet.empty |> CoordSet.add coords_arr.(i))
   in
-  let rec connect_edges acc arr = function
-    | [] -> acc
-    | (e1, e2) :: xs ->
-        let x1, _, _ = e1 in
-        let x2, _, _ = e2 in
-        let iset1, set1 = find_set e1 arr in
-        let iset2, set2 = find_set e2 arr in
-        let acc =
-          if iset1 <> iset2 then begin
-            arr.(iset1) <- CoordSet.union set1 set2;
-            arr.(iset2) <- CoordSet.empty;
-            x1 * x2
-          end
-          else acc
-        in
-        connect_edges acc arr xs
-  in
-  make_edges [] coords
-  |> List.sort (fun (a, b) (c, d) -> distance a b - distance c d)
-  |> connect_edges 0 arr
 
+  let rec connect_edges i acc heap =
+	if i = 1 then acc else
+	  match Pairing_heap.pop heap with
+	  | None -> acc
+	  | Some(e1, e2) ->
+		  let x1, _, _ = e1 in
+		  let x2, _, _ = e2 in
+		  let iset1, set1 = find_set e1 arr in
+		  let iset2, set2 = find_set e2 arr in
+          if iset1 <> iset2 then begin
+								   arr.(iset1) <- CoordSet.union set1 set2;
+								   arr.(iset2) <- CoordSet.empty;
+								   connect_edges (i - 1) (x1 * x2) heap
+								 end
+          else 
+			connect_edges i acc heap
+  in
+  let heap = Pairing_heap.create 
+			   ~cmp:(fun (a, b) (c, d) -> distance a b - distance c d) 
+			   () 
+  in
+  Array.iteri (fun i x -> 
+		  Array.iteri (fun j elem -> 
+				if j > i then Pairing_heap.add heap (x, elem)
+			) coords_arr
+	  ) coords_arr;
+
+ 
+  connect_edges n 0 heap
 
 let () =
   let lines = read_all_lines Sys.argv.(1) in
