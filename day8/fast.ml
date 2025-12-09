@@ -87,9 +87,10 @@ let part1 lines n =
 
 let part2 lines =
   let coords = make_coords [] lines in
+  let coords_arr = Array.of_list coords in
   let arr =
     Array.init (List.length coords) (fun i ->
-        CoordSet.empty |> CoordSet.add (List.nth coords i))
+        CoordSet.empty |> CoordSet.add coords_arr.(i))
   in
   let rec connect_edges acc arr = function
     | [] -> acc
