@@ -1,0 +1,4 @@
+(executable
+ (name fast)
+ (modules fast)
+ (libraries core_kernel.pairing_heap))
