@@ -36,20 +36,22 @@ let rec make_edges acc = function
       in
       make_edges (new_acc @ acc) xs
 
-let insert_in_heap heap n elem =
-  if (Pairing_heap.length heap) < n then
-	Pairing_heap.add heap elem
-else
-	Pairing_heap.remove_top heap;
-  Pairing_heap.add heap elem
 
-let heap_reversed_list heap =
+let insert_in_heap heap n elem =
+  if (Pairing_heap.length heap) <= n then
+	Pairing_heap.add heap elem
+else begin
+	Pairing_heap.remove_top heap;
+	Pairing_heap.add heap elem
+end
+
+let heap_ordered_list heap =
   let rec aux acc =
     match Pairing_heap.pop heap with
     | None -> acc
     | Some x -> aux (x :: acc)
   in
-  List.rev (aux [])
+  aux []
 
 let part1 lines n =
   let coords = make_coords [] lines in
@@ -74,10 +76,13 @@ let part1 lines n =
   in
   let heap = Pairing_heap.create ~min_size:n ~cmp:(fun (a, b) (c, d) -> distance c d - distance a b) () in
 
-  make_edges [] coords
-	|> List.iter (fun x -> insert_in_heap heap n x);
+  Array.iteri (fun i x -> 
+		  Array.iteri (fun j elem -> 
+				if j > i then insert_in_heap heap n (x, elem)
+			) coords_arr
+	  ) coords_arr;
 
-  heap_reversed_list heap
+  heap_ordered_list heap
   |> connect_edges n arr
   |> Array.sort (fun a b -> compare (CoordSet.cardinal b) (CoordSet.cardinal a));
 

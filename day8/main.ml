@@ -96,4 +96,4 @@ let () =
   let result1 = part1 lines 1000 in
   let result2 = part2 lines in
   Printf.printf "1: %d\n" result1;
- Printf.printf "2: %d\n" result2
+  Printf.printf "2: %d\n" result2
