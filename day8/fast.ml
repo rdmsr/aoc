@@ -24,6 +24,17 @@ let find_set elem arr =
   in
   match aux 0 with Some x -> x | None -> failwith "wtf"
 
+
+let for_each_edge coords f =
+  let rec aux xs =
+    match xs with
+    | [] -> ()
+    | x :: xs' ->
+        List.iter (f x) xs';
+        aux xs'
+  in
+  aux coords
+
 let rec make_coords acc = function
   | [] -> acc
   | line :: rest -> make_coords (parse_coord line :: acc) rest
@@ -72,11 +83,8 @@ let part1 lines n =
   in
   let heap = Pairing_heap.create ~min_size:n ~cmp:(fun (a, b) (c, d) -> distance c d - distance a b) () in
 
-  Array.iteri (fun i x -> 
-		  Array.iteri (fun j elem -> 
-				if j > i then insert_in_heap heap n (x, elem) (fun (a, b) (c, d) -> distance a b - distance c d)
-			) coords_arr
-	  ) coords_arr;
+  for_each_edge coords (fun x elem ->
+    insert_in_heap heap n (x, elem) (fun (a, b) (c, d) -> distance a b - distance c d));
 
   heap_ordered_list heap
 	|> connect_edges n arr
@@ -116,11 +124,8 @@ let part2 lines =
 			   ~cmp:(fun (a, b) (c, d) -> distance a b - distance c d) 
 			   () 
   in
-  Array.iteri (fun i x -> 
-		  Array.iteri (fun j elem -> 
-				if j > i then Pairing_heap.add heap (x, elem)
-			) coords_arr
-	  ) coords_arr;
+  for_each_edge coords (fun x elem ->
+				Pairing_heap.add heap (x, elem));
 
  
   connect_edges n 0 heap
