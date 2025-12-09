@@ -25,11 +25,11 @@ let part1 lines =
 let rect_bounds (x1, y1) (x2, y2) = (min x1 x2, max x1 x2, min y1 y2, max y1 y2)
 
 let crosses (x_lo, x_hi, y_lo, y_hi) (lx, ly) (lx', ly') =
-  (* Checks whether edge crosses rectangle *)
-  max lx lx' > x_lo
-  && min lx lx' < x_hi
-  && max ly ly' > y_lo
-  && min ly ly' < y_hi
+  not
+    (max lx lx' <= x_lo
+    || min lx lx' >= x_hi
+    || max ly ly' <= y_lo
+    || min ly ly' >= y_hi)
 
 let in_polygon a b vertices =
   let bounds = rect_bounds a b in
