@@ -50,17 +50,11 @@ let part2 lines =
   let edges = make_edges vertices in
   let n = Array.length edges in
 
-  let areas = ref [] in
-  for_each_edge coords (fun a b -> areas := ((a, b), area a b) :: !areas);
-
-  let areas_arr = Array.of_list !areas in
-  Array.sort (fun (_, a) (_, b) -> compare b a) areas_arr;
-
-  match
-    Array.find_opt (fun ((a, b), _) -> in_polygon a b edges n) areas_arr
-  with
-  | Some (_, a) -> a
-  | None -> failwith "Not found"
+  let best = ref 0 in
+  for_each_edge coords (fun a b ->
+      let ar = area a b in
+      if ar > !best && in_polygon a b edges n then best := ar);
+  !best
 
 let () =
   let lines = read_all_lines Sys.argv.(1) in
