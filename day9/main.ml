@@ -22,39 +22,45 @@ let part1 lines =
       if area' > !max_area then max_area := area');
   !max_area
 
-let rect_bounds (x1, y1) (x2, y2) = (min x1 x2, max x1 x2, min y1 y2, max y1 y2)
-
-let crosses (x_lo, x_hi, y_lo, y_hi) (lx, ly) (lx', ly') =
-  not
-    (max lx lx' <= x_lo
-    || min lx lx' >= x_hi
-    || max ly ly' <= y_lo
-    || min ly ly' >= y_hi)
-
-let in_polygon a b vertices =
-  let bounds = rect_bounds a b in
+let make_edges vertices =
   let n = Array.length vertices in
-
-  let rec check_intersections i =
-    if i = n then false
-    else
+  Array.init n (fun i ->
       let lx, ly = vertices.(i) in
       let lx', ly' = vertices.((i + 1) mod n) in
-      if crosses bounds (lx, ly) (lx', ly') then true
-      else check_intersections (i + 1)
+      (min lx lx', max lx lx', min ly ly', max ly ly'))
+
+let in_polygon (x1, y1) (x2, y2) edge_bounds n =
+  let x_lo = min x1 x2 in
+  let x_hi = max x1 x2 in
+  let y_lo = min y1 y2 in
+  let y_hi = max y1 y2 in
+  let rec check i =
+    if i = n then true
+    else
+      let ex_min, ex_max, ey_min, ey_max = Array.unsafe_get edge_bounds i in
+      if ex_max <= x_lo || ex_min >= x_hi || ey_max <= y_lo || ey_min >= y_hi
+      then check (i + 1)
+      else false
   in
-  not (check_intersections 0)
+  check 0
 
 let part2 lines =
   let coords = List.map parse_coord lines in
   let vertices = Array.of_list coords in
+  let edges = make_edges vertices in
+  let n = Array.length edges in
+
   let areas = ref [] in
   for_each_edge coords (fun a b -> areas := ((a, b), area a b) :: !areas);
 
-  !areas
-  |> List.sort (fun (_, a) (_, b) -> compare b a)
-  |> List.find (fun ((a, b), _) -> in_polygon a b vertices)
-  |> snd
+  let areas_arr = Array.of_list !areas in
+  Array.sort (fun (_, a) (_, b) -> compare b a) areas_arr;
+
+  match
+    Array.find_opt (fun ((a, b), _) -> in_polygon a b edges n) areas_arr
+  with
+  | Some (_, a) -> a
+  | None -> failwith "Not found"
 
 let () =
   let lines = read_all_lines Sys.argv.(1) in
